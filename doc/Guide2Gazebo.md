@@ -1,31 +1,55 @@
-# Guide to the (Ignition) Gazebo Simulator
+# Guide to the Gazebo Simulator
 This guide includes some code and helpful instructions for all things Gazebo (Ignition) including:
-
- 1. **Setting up Gazebo**
- 2. **Start The Simulator**
- 3. **Features and Community Examples**
- 4. **ROS2 Integration Packages**
- 5. **SDF and URDF**
- 6. **SDF and Plugins**
- 7. **Topics**
-
+1. **Setting up Gazebo**
+2. **Features and Community Examples**
+3. **ROS2 Integration**
+4. **SDF and URDF**
+5. **SDF and Plugins**
+6. **Topics**
+7. **CMake**
 
 ---
 <br/>
 
 ## 1. Setting up Gazebo
-### What the heck is Gazebo?
-Gazebo is a full physics simulator that allows for the importing of entire worlds and models expressed using the [SDFormat](http://sdformat.org/). Gazebo also has a very powerful plugin system that allows for precise monitoring and control of a world and the GUI presented to the user, all using the Gazebo C++ API. 
+### Notes on Versioning
+#### Gazebo Classic != Ignition Gazebo
+[Gazebo (Classic)](http://classic.gazebosim.org/) is the predecessor of [Ignition Gazebo](https://gazebosim.org/home). The Ignition project started 7 years ago and functions similar to Classic, but is architecturally different. For most intents and purposes, code or tutorials for Gazebo Classic and Ignition will be completely different and bare little resemblance to each other.
+
+#### Gazebo Classic --> Ignition Gazebo --> Gazebo
+
+As of 8/2022 Ignition Gazebo is now changing back to just Gazebo. This is totally not confusing it's all in your head. 
+
+#### Namespace Issues
+The last planned "Ignition" release will be "Ignition Garden", after that a new naming scheme is planned. The Garden release uses a set of libraries shown here:
+Library|Version
+:-----:|:-----:
+gz-cmake|3.x
+gz-common|5.x
+gz-fuel-tools|8.x
+gz-sim|7.x
+gz-gui|7.x
+gz-launch|6.x
+gz-math|7.x
+gz-msgs|9.x
+gz-physics|6.x
+gz-plugin|2.x
+gz-rendering|7.x
+gz-sensors|7.x
+gz-tools|2.x
+
+Previous versions of Ignition, such as Fortress and Citadel, rely on older versions of the same packages **BUT** the `gz-` prefix is replaced with `ign-`. This may lead to some headache using **cmake** and finding packages, but more importantly, any C++ code that was made for previous releases (pre-Garden) of gazebo will not compile. They will all include header files with the old `ign-` prefix. I have not tested if simply changing the prefix to `gz-` will fix this problem, but this is something to be aware of.
+
 
 ### Installation
 
 The following **Ignition Garden Binary** install commands work as of 8/2022. If they don't, the official installation guide is [here](https://gazebosim.org/docs/latest/install).
 
- ```bash
+```bash
 # Add Ignition's latest packages
 sudo /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list' && \
-sudo /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-nightly.list' && \
-sudo /bin/sh -c 'wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -'
+    sudo /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-nightly.list' && \
+    sudo /bin/sh -c 'wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -'
 
 # Install the latest Ignition binaries
 sudo apt-get -qq update && sudo apt-get -q -y install \
@@ -69,9 +93,9 @@ Options:
 Use 'gz help <command>' to print help for a command.
 ```
 ### Troubleshooting
-If you see less available commands then above, either you did not install all the libraries (see 'Namespace Issues' below) or your system cannot find **configuration files**. 
+If you see less available commands then above, either you did not install all the libraries (each one has a corresponding library, see Namespace Issues above) or your system cannot find configuration files. 
 
-If your system can not find **any** available configuration files you will see this:
+If your system can not find any available configuration files you should see this:
 ```bash
 user@ubuntu_machine:~$ gz
 I cannot find any available 'gz' command:
@@ -80,7 +104,7 @@ I cannot find any available 'gz' command:
 	    E.g.: export GZ_CONFIG_PATH=$HOME/local/share/gz
 ```
 
-Setting the environment variable `GZ_CONFIG_PATH` to the directory containing the yaml config files will fix this. On my machine with **Ignition Garden Binaries** the directory with these config is:
+Setting the environment variable `GZ_CONFIG_PATH` to the directory containing the yaml config files will fix this. On my machine with **Ignition Garden Binaries** the directory with these config files looks like so:
 
 ```bash
 user@ubuntu_machine:~$ ls /usr/share/gz
@@ -93,123 +117,19 @@ If your machine has these config files in the same location, set the config vari
 ```bash
 export GZ_CONFIG_PATH=/usr/share/gz
 ```
-<br/>
-
-### Notes on Versioning
-#### Gazebo Classic != Ignition Gazebo
-[Gazebo (Classic)](http://classic.gazebosim.org/) is the predecessor of [Ignition Gazebo](https://gazebosim.org/home). The Ignition project started 7 years ago and functions similar to Classic, but is architecturally different. For most purposes, code/tutorials for Gazebo Classic and Ignition will **not be compatible** with each other.
-
-#### Gazebo Classic --> Ignition Gazebo --> Gazebo
-
-As of **8/2022** Ignition Gazebo is now changing back to just Gazebo. This is totally not confusing it's all in your head. 
-
-#### Namespace Issues
-The last planned "Ignition" release will be "Ignition Garden", after that a new naming scheme is planned. The Garden release uses a set of libraries shown here:
-Library|Version
-:-----:|:-----:
-gz-cmake|3.x
-gz-common|5.x
-gz-fuel-tools|8.x
-gz-sim|7.x
-gz-gui|7.x
-gz-launch|6.x
-gz-math|7.x
-gz-msgs|9.x
-gz-physics|6.x
-gz-plugin|2.x
-gz-rendering|7.x
-gz-sensors|7.x
-gz-tools|2.x
-
-Previous releases of Ignition, such as Fortress and Citadel, rely on older versions of the same packages **BUT** the `gz-` prefix is replaced with `ign-`. This may lead to some headache using **cmake** and finding packages. More importantly, any C++ code that was made for previous releases (pre-Garden) of gazebo will not compile. They will all `#include` header files with the old `ign-` prefix. 
 
 ---
 <br/>
 
-## 2. Start the Simulator
-First, let's start a simple world. Run the command below and use the buttons in the top left to select, translate, and rotate the objects in the scene.
-```bash
-gz sim shapes.sdf # or ign gazebo shapes.sdf  
-```
-![enter image description here](https://github.com/scole02/Guide2Gazebo/blob/main/doc/image/gazebo_shapes.png)
+## 2. Features and Community Examples 
+### What the heck is Gazebo?
+Gazebo is a full physics simulator that allows for the importing of entire worlds and models expressed using the [SDF format](http://sdformat.org/). Gazebo also has a very powerful plugin system that allows for precise monitoring and control of a world and the GUI presented to the user, all using the Gazebo C++ API. 
 
-### LRAUV Racing
-Now lets move onto something with a bit more spice. The [GZ-Sim repo](https://github.com/gazebosim/gz-sim) has the source code for the `gz-sim` (and `ign-sim`) libraries. It also has some examples and tutorials that are a good place to learn core gazebo concepts. 
-```bash
-git clone https://github.com/gazebosim/gz-sim.git
-cd gz-sim
-git checkout <your_ign_version> # garden == gz-sim7
-cd gz-sim/examples/standalone/multi_lrauv_race
-mkdir build
-cd build
-cmake .. 
-make
-```
-
-Now start the simulation and controller in a separate terminal
-```bash
-gz sim multi_lrauv_race.sdf 
-./multi_race_lrauv
-```
-![enter image description here](https://github.com/scole02/Guide2Gazebo/blob/main/doc/image/gazebo_lrauv_race.png)
-
-Each of the three vehicles in the scene have a thruster which can be used to propel the craft. They also have vertical and horizontal fins, which are used to steer the craft. We can find the topic of the thrusters and fins using the `gz topic` CLI.
-```bash
-user@ubuntu_machine:~$ gz topic -l
-/clock
-/gazebo/resource_paths
-/gui/camera/pose
-/model/daphne/joint/propeller_joint/ang_vel
-/model/tethys/joint/propeller_joint/ang_vel
-/model/triton/joint/propeller_joint/ang_vel
-/stats
-/world/multi_lrauv/clock
-/world/multi_lrauv/dynamic_pose/info
-/world/multi_lrauv/pose/info
-/world/multi_lrauv/scene/deletion
-/world/multi_lrauv/scene/info
-/world/multi_lrauv/state
-/world/multi_lrauv/stats
-/clock
-/gazebo/resource_paths
-/gui/camera/pose
-/model/daphne/joint/propeller_joint/ang_vel
-/model/daphne/joint/propeller_joint/cmd_pos
-/model/daphne/joint/vertical_fins_joint/0/cmd_pos
-/model/tethys/joint/propeller_joint/ang_vel
-/model/tethys/joint/propeller_joint/cmd_pos
-/model/tethys/joint/vertical_fins_joint/0/cmd_pos
-/model/triton/joint/propeller_joint/ang_vel
-/model/triton/joint/propeller_joint/cmd_pos
-/model/triton/joint/vertical_fins_joint/0/cmd_pos
-/stats
-/world/multi_lrauv/clock
-/world/multi_lrauv/dynamic_pose/info
-/world/multi_lrauv/pose/info
-/world/multi_lrauv/scene/deletion
-/world/multi_lrauv/scene/info
-/world/multi_lrauv/state
-/world/multi_lrauv/stats
-```
-Let's learn more about one of these topics 
-
-```bash
-user@ubuntu_machine:~$ gz topic -i -t /model/daphne/joint/propeller_joint/ang_vel
-Publishers [Address, Message Type]:
-  tcp://172.17.0.1:34689, gz.msgs.Double
-```
-This tells us the IP/Port of this message, and what data type it expects to be published. 
-
-Now in Gazebo click the orange play button in the bottom left corner. This will start the simulation. If the controller is started you should see the craft slowly being moving. This controller is randomly publishing fin angles and thruster values to each craft every time step.
-
-
-## 3. Community Examples 
-
-Here are some projects showing what is possible using SDF models, Gazebo plugins, and other common robotics frameworks.
+Here are some projects showing what is possible using SDF models, Gazebo plugins, and common robotics frameworks.
 
 ### Pure Gazebo ROV ([MBARI LRAUV](https://github.com/osrf/lrauv))
 
-OSRF project that shows how custom UI, sensors, physics, communications, and data collection can be achieved using **only Gazebo Plugins**. 
+OSRF project that shows how custom UI, sensors, physics, communications, and data collection can be achieved using only Gazebo Plugins. 
 ![](https://global.discourse-cdn.com/standard10/uploads/gazebo/optimized/1X/973b1dbc28d0547136781b923748a6e780cf6c1e_2_690x379.jpeg)
 
 <br/>
@@ -231,7 +151,7 @@ This project showcases using Gazebo and the Moveit ROS2 package together.
 ---
 <br/>
 
-## 4. ROS2 Integration Packages
+## 3. ROS2 Integration
 ### Gazebo Bridge ([ros_ign_bridge](https://github.com/gazebosim/ros_gz/tree/galactic_to_ros2/ros_ign_bridge))
 This package provides a bridge communcation layer that allows for the bidirectional exchange of messages between ROS2 and Gazebo. 
 
@@ -295,19 +215,19 @@ Gazebo has full support for simulating depth cameras and generating pointcloud d
 
 ### ROS2 Control and Gazebo ([gz_ros2_control](https://github.com/ros-controls/gz_ros2_control))
 
-This is a ROS2 package for integrating the `ros2_control` controller architecture with the [Ignition Gazebo](http://ignitionrobotics.org/) simulator. As of **8/2022**, this package **does NOT support Ignition Garden**.
+This package allows models within gazebo to react to state updates of controllers implementing the `ros2_control` architecture. As of writing, this package **does NOT support Ignition Garden**.
 ![](https://github.com/ros-controls/gz_ros2_control/raw/master/img/ign_ros2_control.gif)
 
 ---
 <br/>
 
-## 5. SDF and URDF
+## 4. SDF and URDF
 [**SDFormat**](http://sdformat.org/) (Simulation Description Format), is an XML format that describes objects and environments for robot simulators, visualization, and control. **Gazebo** represents worlds and models (robots) using SDF.
 
 
-[**URDF**](http://wiki.ros.org/urdf) (Universal Robot Description Format) is also an xml format that is used to describe robots, sensors, and scenes. This format is commonly used within **ROS** and packages such as Moveit.
+[**URDF**](http://wiki.ros.org/urdf) (Universal Robot Description Format) is also an xml format that is used to describe robots, sensors, and scenes. This format is used within **ROS** and packages such as Moveit.
 
-For more detail:
+For more detail see these articles/tutorials:
 * [ROS URDF Tutorials](http://wiki.ros.org/urdf/Tutorials)
 * [Gazebo Classic: Make an SDF Model](https://classic.gazebosim.org/tutorials?tut=build_model&cat=build_robot#ComponentsofSDFModels) 
 * [URDF vs. SDF – Link Pose, Joint Pose, Visual & Collision](https://automaticaddison.com/urdf-vs-sdf-link-pose-joint-pose-visual-collision/)
@@ -316,17 +236,28 @@ For more detail:
 ### Convert URDF to SDF
 The CLI `gz sdf` provides a set of tools for converting and getting more detail about SDF files.
 
-Before converting URDF to SDF, ensure that all [`xacro`](http://wiki.ros.org/xacro) has been parsed out of the source URDF. This can be done using the xacro CLI that is bundled with ROS2. Then use `gz sdf -p` to convert:
+Before converting URDF to SDF, ensure that all [`xacro`](http://wiki.ros.org/xacro) has been parsed out of the source URDF. This can be done using the xacro CLI that is bundled with ROS2. Then use `gz sdf -p`:
 
 ```bash
 source /opt/ros/$ROS_DISTRO/setup.sh  # find xacro command
-xacro robot.urdf.xacro > robot.urdf   # parse out xacro
+xacro robot.urdf.xacro > robot.urdf   # parse out xacro tags
 gz sdf -p robot.urdf > robot.sdf      # convert to sdf
 ```
 
-This can also be done inside a **ROS2 launch file** using the package `ros_ign_gazebo`. In this example our xacro file takes two arguments and is located in the installed package, `robot_description`, in directory, `/urdf/robot.xacro.urdf`. This launch file also **spawns the urdf** into the default gazebo world included with every install, `empty.sdf`.
+This can also be done inside a ROS2 launch file using the package `ros_ign_gazebo`. In this example our xacro file takes two arguments and is located in the **installed** package, `robot_description` in the urdf directory, `/urdf/robot.xacro.urdf`. This launch file also spawns the urdf into the default gazebo world included with every install, `empty.sdf`.
 ```python=
 # ROS2 Launch file that converts xacro -> urdf, and spawns urdf into sdf world
+
+from ament_index_python.packages import get_package_share_directory
+
+from launch import LaunchDescription
+from launch.substitutions import LaunchConfiguration
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import Node
+
+import xacro
+from os import path
 
 def generate_launch_description(
 
@@ -373,6 +304,7 @@ def generate_launch_description(
             ),
         ]
     )
+
 ```
 
 ### Troubleshooting
@@ -390,7 +322,7 @@ If the output SDF file produced has no body or is missing elements, make sure th
     <link name="link">
       <pose>0 0 0 0 0 0</pose>
         
-         <inertial> <!-- 'gz sdf -p' needs this tag for every link -->
+         <inertial> <!-- 'gz sdf' needs this tag for every link -->
           <inertia>
             <ixx>1</ixx>
             <ixy>0</ixy>
@@ -401,6 +333,19 @@ If the output SDF file produced has no body or is missing elements, make sure th
           </inertia>
           <mass>1.0</mass>
         </inertial>
+
+        <collision name="my_collision">
+          ...
+        </collision>
+
+        <visual name="my_visual">
+          ...
+        </visual>
+
+        <sensor type="camera" name="my_sensor">
+          ...
+        </sensor>
+        
     </link>
   </model>
 </sdf>
@@ -424,24 +369,7 @@ gazebo_models/
 │  ├─ model.sdf
 ...
 ```
-Where `model.config` looks like this:
-```xml
-<?xml version="1.0"?>
-<model>
-	<name>Robot</name>
-	<version>1.0</version>
-	<sdf version="1.6">model.sdf</sdf>
 
-	<author>
-		<name>Gary Gazebo</name>
-		<email>garyrocks@gzeebo.com</email>
-	</author>
-
-	<description>
-		A super cool robot
-	</description>
-</model>
-```
 Now in a gazebo world SDF file you can include your model:
 
 ```xml
@@ -472,15 +400,15 @@ gz sim robot_world.sdf # start the world
 ---
 <br/>
 
-## 6. SDF and Plugins
+## 5. SDF and Plugins
 
-For any complex logic or data processing not handled by the default configuration, a [Gazebo plugin](https://gazebosim.org/api/gazebo/2.10/createsystemplugins.html) will have to be used. These are very powerful components and can have access to the entirety of a world's parameters as well as any entities (models) that exist within it. 
+For any complex logic or data processing beyond the default, a [Gazebo plugin](https://gazebosim.org/api/gazebo/2.10/createsystemplugins.html) will have to be used. These are very powerful components and can have access to the entirety of a world's parameters as well as any entities (models) that exist within it. 
 
 Plugins can be used to:
 * Apply special physics to a world globally
 * Apply special physics to a model
 * Add Sensors to a model 
-* Add Actuators (thruster, control surfaces) to a model
+* Add Actuators to a model
 * Rendering custom graphics
 * Control the camera
 * Change the UI
@@ -514,7 +442,7 @@ In general the first step to using a plugin is adding its library to the world f
 For plugins that are model independent, only adding them to the world file should suffice. When adding a plugin that is part of a model, such as an **Altimeter Sensor**, we must specify the *plugin system* in the world file **AND** the sensor itself in the model file.
 
 ```xml
-<!-- in world.sdf -->
+<!-- in world sdf -->
 <!-- plugin system is responsible for loading the sensor plugin  -->
     <plugin 
       filename="ignition-gazebo-altimeter-system"
@@ -525,7 +453,7 @@ For plugins that are model independent, only adding them to the world file shoul
 </sdf>
 ```
 ```xml
-<!-- in model.sdf -->
+<!-- in model sdf -->
       <sensor name="altimeter" type="altimeter">
           <always_on>1</always_on>
           <update_rate>10</update_rate>
@@ -551,7 +479,7 @@ For plugins that are model independent, only adding them to the world file shoul
 </sdf>
 ```
 ---
-## 7. Topics
+## 6. Topics
 Similiar to ROS, Gazebo has a topic system where messages are published and subscribed to as the world and model change over time. These topics are published and subscribed to by plugins.
 
 ### Topic CLI 
@@ -560,8 +488,8 @@ Here are some helpful commands for interacting with topics:
 ```bash
 # list all topics currently being published
 gz topic -l                                 
-# "echo messages published to /stats topic"
-gz topic -e -t /stats                     
+# "echo messages published to my_topic"
+gz topic -e -t my_topic                     
 # publish double msg to "my_topic" 
 gz topic -t my_topic -m gz.msgs.Double -p 'data : 1.0'
 ```

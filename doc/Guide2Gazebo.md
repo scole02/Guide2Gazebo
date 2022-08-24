@@ -495,8 +495,12 @@ gz topic -t my_topic -m gz.msgs.Double -p 'data : 1.0'
 ```
 
 
-<!-- ## CMake
+## 7. CMake
 
 Alot of cmake build problems can be fixed by setting your ignition version:
 
-`user@ubuntu_machine:~$export IGNITION_VERSION=garden;` -->
+`user@ubuntu_machine:~$export IGNITION_VERSION=garden;`
+
+If this doesn't fix the problem...   
+<img src="https://github.com/scole02/Guide2Gazebo/blob/main/doc/image/cmake_pain.jpeg" width="200">
+

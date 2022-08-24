@@ -1,4 +1,4 @@
-# Guide to the Gazebo Simulator
+# Guide to the Gazebo (Ignition) Simulator
 This guide includes some code and helpful instructions for all things Gazebo (Ignition) including:
 1. **Setting up Gazebo**
 2. **Features and Community Examples**

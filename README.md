@@ -52,7 +52,7 @@ sudo /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stabl
     sudo /bin/sh -c 'wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -'
 
 # Install the latest Ignition binaries
-sudo apt-get -qq update && sudo apt-get -q -y install \
+sudo apt-get -qq update && sudo apt-get install \
   ignition-garden
   ```
  

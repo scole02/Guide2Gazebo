@@ -245,7 +245,7 @@ gz sdf -p robot.urdf > robot.sdf      # convert to sdf
 ```
 
 This can also be done inside a ROS2 launch file using the package `ros_ign_gazebo`. In this example our xacro file takes two arguments and is located in the **installed** package, `robot_description` in the urdf directory, `/urdf/robot.xacro.urdf`. This launch file also spawns the urdf into the default gazebo world included with every install, `empty.sdf`.
-```python=
+```python
 # ROS2 Launch file that converts xacro -> urdf, and spawns urdf into sdf world
 
 from ament_index_python.packages import get_package_share_directory
@@ -313,7 +313,7 @@ For checking general XML/SDF syntax errors use the command:
 
 If the output SDF file produced has no body or is missing elements, make sure that **ALL links have inertia and mass**. This is done using an [inertial XML tag](http://sdformat.org/spec?ver=1.9&elem=link#link_inertial) that might look like this:
 
-```xml=
+```xml
 <?xml version="1.0" ?>
 <sdf version="1.5">
   <model name="box">

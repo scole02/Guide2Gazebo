@@ -1,12 +1,13 @@
 # Guide to the Gazebo (Ignition) Simulator
 This guide includes some code and helpful instructions for all things Gazebo (Ignition) including:
 1. **Setting up Gazebo**
-2. **Features and Community Examples**
-3. **ROS2 Integration**
-4. **SDF and URDF**
-5. **SDF and Plugins**
-6. **Topics**
-7. **CMake**
+2. **Docker**
+3. **Features and Community Examples**
+4. **ROS2 Integration**
+5. **SDF and URDF**
+6. **SDF and Plugins**
+7. **Topics**
+8. **CMake**
 
 ---
 <br/>
@@ -121,7 +122,31 @@ export GZ_CONFIG_PATH=/usr/share/gz
 ---
 <br/>
 
-## 2. Features and Community Examples 
+## 2. Docker
+<img src="https://github.com/scole02/Guide2Gazebo/blob/main/doc/image/docker.png"></img>  
+If you want to try out gazebo but don't want to clutter your current OS, the `gz-sim` github repo contains a whole section with Dockerfile(s) and instructions on how to build them [here](https://github.com/gazebosim/gz-sim/tree/gz-sim7/docker). 
+
+### Troubleshooting
+Using the `gz-sim:nightly` image, you may run into problems when attempting to open the gazebo GUI. In my case these issues were related to a **QT5 X server** plugin and the docker container unable to find my graphics card. Here were some of the errors I got when running the docker command `docker run --gpus gz-sim:nightly gz sim`:
+```
+QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-root'
+libGL error: MESA-LOADER: failed to retrieve device information
+intel_do_flush_locked failed: Input/output error
+...
+```
+```
+qt.qpa.xcb: could not connect to display 
+qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
+This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+...
+```
+
+
+The following docker command should alleviate these problems:  
+`docker run -it --net=host -e DISPLAY=$DISPLAY --device /dev/dri/card0:/dev/dri/card0 -v /tmp/.X11-unix/:/tmp/.X11-unix gz-sim:nightly bash`
+
+
+## 3. Features and Community Examples 
 ### What the heck is Gazebo?
 Gazebo is a full physics simulator that allows for the importing of entire worlds and models expressed using the [SDF format](http://sdformat.org/). Gazebo also has a very powerful plugin system that allows for precise monitoring and control of a world and the GUI presented to the user, all using the Gazebo C++ API. 
 
@@ -151,7 +176,7 @@ This project showcases using Gazebo and the Moveit ROS2 package together.
 ---
 <br/>
 
-## 3. ROS2 Integration
+## 4. ROS2 Integration
 ### Gazebo Bridge ([ros_ign_bridge](https://github.com/gazebosim/ros_gz/tree/galactic_to_ros2/ros_ign_bridge))
 This package provides a bridge communcation layer that allows for the bidirectional exchange of messages between ROS2 and Gazebo. 
 
@@ -221,7 +246,7 @@ This package allows models within gazebo to react to state updates of controller
 ---
 <br/>
 
-## 4. SDF and URDF
+## 5. SDF and URDF
 [**SDFormat**](http://sdformat.org/) (Simulation Description Format), is an XML format that describes objects and environments for robot simulators, visualization, and control. **Gazebo** represents worlds and models (robots) using SDF.
 
 
@@ -400,7 +425,7 @@ gz sim robot_world.sdf # start the world
 ---
 <br/>
 
-## 5. SDF and Plugins
+## 6. SDF and Plugins
 
 For any complex logic or data processing beyond the default, a [Gazebo plugin](https://gazebosim.org/api/gazebo/2.10/createsystemplugins.html) will have to be used. These are very powerful components and can have access to the entirety of a world's parameters as well as any entities (models) that exist within it. 
 
@@ -479,7 +504,7 @@ For plugins that are model independent, only adding them to the world file shoul
 </sdf>
 ```
 ---
-## 6. Topics
+## 7. Topics
 Similiar to ROS, Gazebo has a topic system where messages are published and subscribed to as the world and model change over time. These topics are published and subscribed to by plugins.
 
 ### Topic CLI 
@@ -495,7 +520,7 @@ gz topic -t my_topic -m gz.msgs.Double -p 'data : 1.0'
 ```
 
 
-## 7. CMake
+## 8. CMake
 
 Alot of cmake build problems can be fixed by setting your ignition version:
 

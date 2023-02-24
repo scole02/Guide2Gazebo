@@ -141,9 +141,12 @@ This application failed to start because no Qt platform plugin could be initiali
 ...
 ```
 
+Run this command to set allow all clients to connect to xserver
+`xhost +`
 
 The following docker command should alleviate these problems:  
 `docker run -it --net=host -e DISPLAY=$DISPLAY --device /dev/dri/card0:/dev/dri/card0 -v /tmp/.X11-unix/:/tmp/.X11-unix gz-sim:nightly bash`
+
 
 
 ## 3. Features and Community Examples 
